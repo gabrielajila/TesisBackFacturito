@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.facturito.FacturaDTO;
+import com.facturito.consultas.DashboardClienteProductoFrecuenteDTO;
 import com.facturito.consultas.DashboardFacturaAnioMes;
 import com.facturito.entity.TCliente;
 import com.facturito.entity.TFactura;
@@ -61,10 +62,7 @@ public interface TFacturaDAO extends JpaRepository<TFactura, Long> {
 	
 	@Query("SELECT EXTRACT(YEAR FROM tf.fechaEmision) AS anio, EXTRACT(MONTH FROM tf.fechaEmision) AS mes, COUNT(tf.id) AS cantidad FROM TFactura tf WHERE tf.idCliente.idCliente= :idCliente AND tf.fechaEmision >= :fechaHaceSeisMeses GROUP BY EXTRACT(YEAR FROM tf.fechaEmision), EXTRACT(MONTH FROM tf.fechaEmision) ORDER BY mes, anio ASC")
 	public List<DashboardFacturaAnioMes> getFacturasLast6Mont(Long idCliente, Date fechaHaceSeisMeses, Pageable pageable);
-//	@Query("SELECT NEW ec.tws2.back.contfiables.contultasModels.DashboardFacturaAnioMes( f.id, f.fechaEmision, f.total) FROM TFactura f WHERE f.idCliente.idCliente =:idCliente AND YEAR(f.fechaEmision) = :anio")
-//	public List<DashboardFacturaAnioMes> buscarFacturasByClienteAndAnio(Long idCliente, int anio);
-//
-//	@Query("SELECT NEW ec.tws2.back.contfiables.contultasModels.DashboardFacturaAnioMes( f.id, f.fechaEmision, f.total) FROM TFactura f WHERE f.idCliente.idCliente =:idCliente AND YEAR(f.fechaEmision) = :anio AND MONTH(f.fechaEmision) = :mes")
-//	public List<DashboardFacturaAnioMes> buscarFacturasByClienteAndAnioAndMes(Long idCliente, int anio, int mes);
 
+	@Query("SELECT tf.idAdquiriente.razonSocial as nombre, count(tf.id) as cantidad FROM TFactura tf WHERE tf.idCliente.idCliente = :idCliente GROUP BY tf.idAdquiriente.razonSocial ORDER BY cantidad desc")
+	public List<DashboardClienteProductoFrecuenteDTO> getClientesFrecuentes(Long idCliente, Pageable pageable);
 }

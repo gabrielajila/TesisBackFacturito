@@ -16,11 +16,21 @@ import com.facturito.service.DashboardService;
 @CrossOrigin("*")
 public class DashboardController {
 
-	@Autowired private DashboardService dashboard;
-	
+	@Autowired
+	private DashboardService dashboard;
+
 	@PostMapping("getFacturasByMonth")
-	public  ResponseEntity<RespSimple> getFacturasByMonth(@RequestParam Long idCliente){
+	public ResponseEntity<RespSimple> getFacturasByMonth(@RequestParam Long idCliente) {
 		return dashboard.getFacturasMeses(idCliente);
 	}
-	
+
+	@PostMapping("getClientesFrecuentes")
+	public ResponseEntity<RespSimple> getClientesFrecuentes(@RequestParam Long idCliente) {
+		return dashboard.getClientesFrecuentes(idCliente);
+	}
+
+	@PostMapping("getProductosFrecuentes")
+	public ResponseEntity<RespSimple> getProductosFrecuentes(@RequestParam Long idCliente) {
+		return dashboard.getProductosFrecuentes(idCliente);
+	}
 }

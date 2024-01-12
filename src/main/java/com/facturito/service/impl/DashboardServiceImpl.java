@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.facturito.DAO.TFacturaDAO;
+import com.facturito.DAO.TFacturaDetalleDAO;
 import com.facturito.consultas.DashboardFacturaAnioMes;
 import com.facturito.consultas.DashboardFacturasDTO;
 import com.facturito.model.RespSimple;
@@ -25,34 +26,37 @@ import com.facturito.util.FacturitoEnum;
 @Service
 public class DashboardServiceImpl implements DashboardService {
 
-	@Autowired
-	private TFacturaDAO facturaDAO;
+    @Autowired
+    private TFacturaDAO facturaDAO;
 
-	@Override
-	public ResponseEntity<RespSimple> getFacturasMeses(Long idCliente) {
-		try {
-			Pageable pageable = PageRequest.of(0, 6);
-			LocalDate fechaHaceSeisMeses = LocalDate.now().minusMonths(6);
+    @Autowired
+    private TFacturaDetalleDAO facturaDetalleDAO;
 
-			Date fechaHaceSeisMesesDate = Date
-					.from(fechaHaceSeisMeses.atStartOfDay(ZoneId.systemDefault()).toInstant());
-			List<DashboardFacturaAnioMes> listaFacturas = facturaDAO.getFacturasLast6Mont(idCliente,
-					fechaHaceSeisMesesDate, pageable);
-			List<DashboardFacturasDTO> facturasDTO = new ArrayList<>();
-			for (DashboardFacturaAnioMes d : listaFacturas) {
-				facturasDTO.add(new DashboardFacturasDTO(d.getAnio(), d.getMes(), d.getCantidad()));
-			}
-			RespSimple response = new RespSimple();
-			response.setCodigo(FacturitoEnum.TRANSACCION_OK.getId());
-			response.setMensaje("");
-			response.setData(completarMesesConCero(facturasDTO));
-			return new ResponseEntity<RespSimple>(response, HttpStatus.OK);
-		} catch (Exception e) {
-			System.out.println("error: " + e);
-			return new ResponseEntity<RespSimple>(new RespSimple(FacturitoEnum.TRANSACCION_ERROR.getId(), "", null),
-					HttpStatus.OK);
-		}
-	}
+    @Override
+    public ResponseEntity<RespSimple> getFacturasMeses(Long idCliente) {
+        try {
+            Pageable pageable = PageRequest.of(0, 6);
+            LocalDate fechaHaceSeisMeses = LocalDate.now().minusMonths(6);
+
+            Date fechaHaceSeisMesesDate = Date
+                    .from(fechaHaceSeisMeses.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            List<DashboardFacturaAnioMes> listaFacturas = facturaDAO.getFacturasLast6Mont(idCliente,
+                    fechaHaceSeisMesesDate, pageable);
+            List<DashboardFacturasDTO> facturasDTO = new ArrayList<>();
+            for (DashboardFacturaAnioMes d : listaFacturas) {
+                facturasDTO.add(new DashboardFacturasDTO(d.getAnio(), d.getMes(), d.getCantidad()));
+            }
+            RespSimple response = new RespSimple();
+            response.setCodigo(FacturitoEnum.TRANSACCION_OK.getId());
+            response.setMensaje("");
+            response.setData(completarMesesConCero(facturasDTO));
+            return new ResponseEntity<RespSimple>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            System.out.println("error: " + e);
+            return new ResponseEntity<RespSimple>(new RespSimple(FacturitoEnum.TRANSACCION_ERROR.getId(), "", null),
+                    HttpStatus.OK);
+        }
+    }
 
     public static List<DashboardFacturasDTO> completarMesesConCero(List<DashboardFacturasDTO> datosFacturas) {
         List<DashboardFacturasDTO> ultimosSeisMeses = new ArrayList<>();
@@ -84,6 +88,37 @@ public class DashboardServiceImpl implements DashboardService {
         });
 
         return ultimosSeisMeses;
+    }
+
+    @Override
+    public ResponseEntity<RespSimple> getClientesFrecuentes(Long idCliente) {
+        try {
+            Pageable pageable = PageRequest.of(0, 3);
+
+            return new ResponseEntity<RespSimple>(
+                    new RespSimple(FacturitoEnum.TRANSACCION_OK.getId(), "Encontrado",
+                            facturaDAO.getClientesFrecuentes(idCliente, pageable)),
+                    HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<RespSimple>(
+                    new RespSimple(FacturitoEnum.TRANSACCION_ERROR.getId(), "No data", new ArrayList<>()),
+                    HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public ResponseEntity<RespSimple> getProductosFrecuentes(Long idCliente) {
+        try {
+            Pageable pageable = PageRequest.of(0, 3);
+            return new ResponseEntity<RespSimple>(
+                    new RespSimple(FacturitoEnum.TRANSACCION_OK.getId(), "Encontrado",
+                            facturaDetalleDAO.getProductosFrecuentes(idCliente, pageable)),
+                    HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<RespSimple>(
+                    new RespSimple(FacturitoEnum.TRANSACCION_ERROR.getId(), "No data", new ArrayList<>()),
+                    HttpStatus.NOT_FOUND);
+        }
     }
 
 }
