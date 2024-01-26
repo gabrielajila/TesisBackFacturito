@@ -122,19 +122,7 @@ public class FacturacionController {
 		return facturacionService.facturar(datosFacturas);
 	}
 
-	@PostMapping(value = "reenviarFacturaPorCorreo", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<RespSimple> reenviarFacturaPorCorreo(@RequestParam Long idFactura,
-			@RequestParam String correo) {
-		return facturacionService.reenviarCorreo(idFactura, correo, null);
-	}
 
-	@PostMapping(value = "movil/reenviarFacturaPorCorreoByNumAut", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<RespSimple> reenviarFacturaPorCorreoByNumAut(@RequestParam String numAutorizacion,
-			@RequestParam String correo) {
-
-		return facturacionService.reenviarCorreo(null, correo, numAutorizacion);
-	}
-	
 	// SOLO PARA EL MOVIL
 	@PostMapping(value = "facturar", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<RespSimple> facturar(@RequestBody DatosFactura datosFacturas) {
