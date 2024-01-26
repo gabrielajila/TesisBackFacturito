@@ -76,7 +76,6 @@ public class FacturaServiceImpl implements FacturaService {
 	public ResponseEntity<RespSimple> guardarFacturaWEB(FacturaDetalle factura) {
 		RespSimple respuesta = new RespSimple();
 		try {
-			List<String> listTipoPagoEnum = new ArrayList<>();
 
 			TFactura t_factura = new TFactura();
 

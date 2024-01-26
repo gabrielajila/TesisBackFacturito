@@ -473,6 +473,7 @@ public class FacturacionServiceImlp {
 			}
 
 			try {
+				System.out.println("factura regimen: "+factura.getInfoTributaria().getContribuyenteRimpe());
 				respuesta = template.postForObject(urlFacturar, factura, RespSimple.class);
 				if (respuesta.getCodigo().contains("ERR")) {
 					respuesta.setCodigo(FacturitoEnum.TRANSACCION_ERROR.getId());
@@ -487,7 +488,7 @@ public class FacturacionServiceImlp {
 							"El servidor del SRI está intermitente, su factura se enviará una vez el servicio esté disponible.");
 					return new ResponseEntity<RespSimple>(respuesta, HttpStatus.OK);
 				}
-
+				log.log(Level.SEVERE, "ERROR SRI: ",con);
 				respuesta.setCodigo(FacturitoEnum.TRANSACCION_OK.getId());
 				respuesta.setMensaje("Factura Generada pero no Autorizada");
 				respuesta.setDescripcion(con.getMessage());
