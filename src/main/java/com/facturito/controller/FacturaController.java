@@ -1,6 +1,5 @@
 package com.facturito.controller;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -21,6 +20,7 @@ import com.facturito.model.RespSimple;
 import com.facturito.service.FacturaService;
 import com.facturito.service.TFormaPagoComprobantesService;
 import com.facturito.service.impl.FacturacionServiceImlp;
+import com.facturito.service.impl.ReenvioProgramadoFacturasService;
 import com.facturito.util.DateOperations;
 import com.facturito.model.DatosFactura;
 
@@ -38,10 +38,13 @@ public class FacturaController {
 	@Autowired
 	private TFormaPagoComprobantesService formaPagoComprobantesService;
 
-//	@PostMapping(value = "reenviarFacturabyIdFactura", produces = MediaType.APPLICATION_JSON_VALUE)
-//	public ResponseEntity<RespSimple> reenviarFacturabyIdFactura(@RequestParam BigDecimal idFactura) {
-//		return reenvioFacturacionService.buscarFacturaAreeenviar(idFactura);
-//	}
+	@Autowired
+	private ReenvioProgramadoFacturasService reenvioService;
+	
+	@PostMapping(value = "reenviarFacturabyIdFactura", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RespSimple> reenviarFacturabyIdFactura(@RequestParam Long idFactura) {
+		return reenvioService.enviarFactura(idFactura);
+	}
 	
 	@PostMapping(value = "facturar", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<RespSimple> facturar(@RequestBody DatosFactura datosFacturas) {

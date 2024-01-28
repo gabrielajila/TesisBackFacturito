@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -46,59 +47,87 @@ public class ReenvioProgramadoFacturasService {
 	@Value("${property.path.enviacorreo}")
 	private String urlEnviarCorreo;
 
-	@Scheduled(fixedRate = 1200000) // Se ejecuta cada 2 horas
-	public void doSomethingScheduled() {
+	public ResponseEntity<RespSimple> enviarFactura(Long idFactura) {
+		try {
+			TFactura fac = facturaDAO.findById(idFactura).orElse(null);
+			if (fac == null)
+				return new ResponseEntity<RespSimple>(new RespSimple("0", "Factura no encontrada", fac),
+						HttpStatus.NOT_FOUND);
+			RespSimple response = ejecutarEnvio(fac);
+			return new ResponseEntity<RespSimple>(response, HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<RespSimple>(new RespSimple("1", "Error al enviar la factura", null),
+					HttpStatus.NOT_FOUND);
+		}
+	}
+
+	public RespSimple ejecutarEnvio(TFactura fac) {
 		// Lógica de la tarea programada
 		log.log(Level.INFO, "Tarea programada ejecutada");
 		DatosFactura datosFactura = new DatosFactura();
-		List<TFactura> listaFacturas = facturacionService.obtenerTodasFacturasNoAutorizadas();
-		for (TFactura fac : listaFacturas) {
-			if (fac.getIntentosAutorizacion() <= 2) {
-				datosFactura = new DatosFactura();
-				System.out.println(fac.getIsAutorizado());
-				datosFactura.setFechaEmision(fac.getFechaEmision());
-				datosFactura.setRuc(fac.getIdCliente().getIdentification());
-				datosFactura.setRazonSocialComprador(fac.getIdAdquiriente().getRazonSocial());
-				datosFactura.setIdentificacionComprador(fac.getIdAdquiriente().getIdentificacion());
-				datosFactura.setDireccionComprador(fac.getIdAdquiriente().getDireccion());
-				datosFactura.setTelefonoComprador(fac.getIdAdquiriente().getTelefono());
-				datosFactura.setEmailComprador(fac.getIdAdquiriente().getEmailAdquiriente());
-				datosFactura.setDescuentoComprador(new BigDecimal(0));// DESCUENTO ADQUIRIENTE CERO
-				datosFactura.setCodigoIdentificacion(fac.getIdAdquiriente().getIdTipoIdentificacion().getCodigo());
-				datosFactura.setObservacionesComprador(fac.getObservacionesComprador());
-				datosFactura.setNumComprobante(fac.getNumComprobante());
-				datosFactura.setLstDetalle(new ArrayList<>());
-				List<TFacturaDetalle> facturaDetalle = facturacionService.getDetalleFactura(fac.getId());
-				for (TFacturaDetalle fd : facturaDetalle) {
-					DatosFacturasDetalle dtsDetalle = new DatosFacturasDetalle();
-					dtsDetalle.setDescripcion(fd.getIdProducto().getNombreProducto());
-					dtsDetalle.setCodigo(fd.getIdProducto().getCodigo());
-					BigDecimal precioSinIva = new BigDecimal(0);
-					BigDecimal iva = BigDecimal.valueOf(fd.getIdProducto().getIdTarifaIva().getPorcentaje())
-							.divide(BigDecimal.valueOf(100)).add(BigDecimal.ONE);
-					precioSinIva = fd.getIdProducto().getPrecioUnitario().divide(iva, 4, RoundingMode.HALF_UP);
-					dtsDetalle.setValor(precioSinIva);
-					dtsDetalle.setCantidad(fd.getCantidad());
-					dtsDetalle.setCodigoIva(fd.getIdProducto().getIdTarifaIva().getIdTarifaIva());
-					datosFactura.getLstDetalle().add(dtsDetalle);
-				}
-
-				ResponseEntity<RespSimple> response = facturacionServiceWEB.reenviarFactura(datosFactura);
-				RespSimple resp = response.getBody();
-				log.log(Level.WARNING, resp.getMensaje());
-				TFactura fact = facturacionService.getFactura(fac.getId());
-				fact.setIntentosAutorizacion(fact.getIntentosAutorizacion() + 1); 
-				fact.setEnviada(false);
-				facturaDAO.save(fact);
-				try {
-					enviarCorreo(fact);
-				} catch (Exception e) {
-					log.log(Level.SEVERE, "Error al enviar factura por email: " + e.getMessage());
-				}
-				log.log(Level.SEVERE, "response controlador automatico: " + resp.getMensaje());
-			}
+//		List<TFactura> listaFacturas = facturacionService.obtenerTodasFacturasNoAutorizadas();
+//		for (TFactura fac : listaFacturas) {
+//		if (fac.getIntentosAutorizacion() <= 2) {
+		datosFactura = new DatosFactura();
+		System.out.println(fac.getIsAutorizado());
+		datosFactura.setFechaEmision(fac.getFechaEmision());
+		datosFactura.setRuc(fac.getIdCliente().getIdentification());
+		datosFactura.setRazonSocialComprador(fac.getIdAdquiriente().getRazonSocial());
+		datosFactura.setIdentificacionComprador(fac.getIdAdquiriente().getIdentificacion());
+		datosFactura.setDireccionComprador(fac.getIdAdquiriente().getDireccion());
+		datosFactura.setTelefonoComprador(fac.getIdAdquiriente().getTelefono());
+		datosFactura.setEmailComprador(fac.getIdAdquiriente().getEmailAdquiriente());
+		datosFactura.setDescuentoComprador(new BigDecimal(0));// DESCUENTO ADQUIRIENTE CERO
+		datosFactura.setCodigoIdentificacion(fac.getIdAdquiriente().getIdTipoIdentificacion().getCodigo());
+		datosFactura.setObservacionesComprador(fac.getObservacionesComprador());
+		datosFactura.setNumComprobante(fac.getNumComprobante());
+		datosFactura.setLstDetalle(new ArrayList<>());
+		List<TFacturaDetalle> facturaDetalle = facturacionService.getDetalleFactura(fac.getId());
+		for (TFacturaDetalle fd : facturaDetalle) {
+			DatosFacturasDetalle dtsDetalle = new DatosFacturasDetalle();
+			dtsDetalle.setDescripcion(fd.getIdProducto().getNombreProducto());
+			dtsDetalle.setCodigo(fd.getIdProducto().getCodigo());
+			BigDecimal precioSinIva = new BigDecimal(0);
+			BigDecimal iva = BigDecimal.valueOf(fd.getIdProducto().getIdTarifaIva().getPorcentaje())
+					.divide(BigDecimal.valueOf(100)).add(BigDecimal.ONE);
+			precioSinIva = fd.getIdProducto().getPrecioUnitario().divide(iva, 2, RoundingMode.HALF_UP);
+			dtsDetalle.setValor(precioSinIva);
+			dtsDetalle.setCantidad(fd.getCantidad());
+			dtsDetalle.setCodigoIva(fd.getIdProducto().getIdTarifaIva().getIdTarifaIva());
+			datosFactura.getLstDetalle().add(dtsDetalle);
 		}
 
+		ResponseEntity<RespSimple> response = facturacionServiceWEB.reenviarFactura(datosFactura);
+		RespSimple resp = response.getBody();
+		log.log(Level.WARNING, resp.getError());
+		if (resp.getCodigo().equals("1")) {
+			return new RespSimple("1", "Factura no enviada", null);
+		}
+		TFactura fact = facturacionService.getFactura(fac.getId());
+		fact.setIntentosAutorizacion(fact.getIntentosAutorizacion() + 1);
+		fact.setEnviada(false);
+		facturaDAO.save(fact);
+		try {
+			enviarCorreo(fact);
+			return new RespSimple("0", "Factura autorizada y enviada correctamente", null);
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Error al enviar factura por email: " + e.getMessage());
+			return new RespSimple("1", "Factura no enviada", null);
+		}
+//			log.log(Level.SEVERE, "response controlador automatico: " + resp.getMensaje());
+//		}
+//		}
+
+	}
+
+	@Scheduled(fixedRate = 1200000)
+	public void reeenviarFactutasNoAutorizadas() {
+		List<TFactura> listaFacturas = facturacionService.obtenerTodasFacturasNoAutorizadas();
+		for (TFactura f : listaFacturas) {
+			if (f.getIntentosAutorizacion() <= 2) {
+				ejecutarEnvio(f);
+			}
+		}
 	}
 
 	@Scheduled(fixedRate = 1300000)
@@ -129,7 +158,7 @@ public class ReenvioProgramadoFacturasService {
 
 			}
 		} catch (Exception e) {
-			System.out.println("Error: " + e.getMessage()); 
+			System.out.println("Error: " + e.getMessage());
 		}
 	}
 
